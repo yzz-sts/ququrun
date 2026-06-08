@@ -37,14 +37,15 @@
         .sidebar-header h2 span { color: var(--accent); }
         .filter-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
         .filter-chip {
-            padding: 4px 10px; background: #2a2a2a; border: 1px solid #333; border-radius: 12px;
-            color: #aaa; font-size: 0.76em; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+            padding: 4px 10px; background: #2a2a2a; border: 1px solid #333; border-radius: 20px;
+            color: #aaa; font-size: 0.76em; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
         }
         .filter-chip:hover { border-color: #555; color: #ddd; }
         .filter-chip.active { background: #333; border-color: var(--accent); color: var(--accent); }
         .search-box {
             margin-top: 6px; width: 100%; padding: 7px 12px; background: #2a2a2a;
-            border: 1px solid #333; border-radius: 6px; color: var(--text); font-size: 0.82em; outline: none;
+            border: 1px solid #333; border-radius: 10px; color: var(--text); font-size: 0.82em; outline: none;
+            transition: all 0.2s ease;
         }
         .search-box:focus { border-color: var(--accent); }
         .search-box::placeholder { color: #555; }
@@ -54,15 +55,16 @@
             display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start;
         }
         .card-grid::-webkit-scrollbar { width: 5px; }
-        .card-grid::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .card-grid::-webkit-scrollbar-track { background: transparent; }
+        .card-grid::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
 
         .mini-card {
-            width: 165px; height: 220px; border-radius: 8px; cursor: pointer;
-            transition: all 0.15s; position: relative; overflow: hidden;
+            width: 165px; height: 220px; border-radius: 12px; cursor: pointer;
+            transition: all 0.2s ease; position: relative; overflow: hidden;
             border: 2px solid #333; background: #2a2a2a; flex-shrink: 0;
         }
         .mini-card:hover { border-color: var(--accent); transform: scale(1.03); z-index: 2; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
-        .mini-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+        .mini-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
         .mini-card .card-emoji {
             width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3.5em;
         }
@@ -83,7 +85,8 @@
         .deck-zone-btns { display: flex; gap: 6px; }
         .btn-reset, .btn-clear {
             padding: 5px 14px; background: transparent; border: 1px solid #444;
-            border-radius: 5px; color: #888; font-size: 0.78em; cursor: pointer; transition: all 0.15s;
+            border-radius: 8px; color: #888; font-size: 0.78em; cursor: pointer;
+            transition: all 0.2s ease;
         }
         .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
         .btn-clear:hover { border-color: #f44; color: #f44; }
@@ -93,17 +96,18 @@
             display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start;
             overflow-y: auto; align-content: flex-start; flex:1;
         }
-        .hand-cards::-webkit-scrollbar { width: 4px; }
-        .hand-cards::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .hand-cards::-webkit-scrollbar { width: 5px; }
+        .hand-cards::-webkit-scrollbar-track { background: transparent; }
+        .hand-cards::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
 
         .hand-card {
-            width: 165px; border-radius: 8px; position: relative; cursor: default;
-            border: 2px solid #444; background: #2a2a2a; flex-shrink: 0; transition: all 0.15s;
-            display: flex; flex-direction: column;
+            width: 165px; border-radius: 12px; position: relative; cursor: default;
+            border: 2px solid #444; background: #2a2a2a; flex-shrink: 0;
+            transition: all 0.2s ease; display: flex; flex-direction: column;
         }
         .hand-card:hover { border-color: #666; }
         .hand-card .hand-card-img-wrap {
-            width: 100%; height: 220px; overflow: hidden; border-radius: 6px 6px 0 0;
+            width: 100%; height: 220px; overflow: hidden; border-radius: 10px 10px 0 0;
         }
         .hand-card .hand-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .hand-card .hand-card-img-wrap .card-emoji {
@@ -113,63 +117,73 @@
             display: flex; align-items: center; justify-content: center; gap: 8px;
             padding: 6px 8px; background: rgba(0,0,0,0.5);
         }
-        .hand-card .hand-card-count {
-            font-size: 0.85em; font-weight: 700; color: var(--accent);
-        }
+        .hand-card .hand-card-count { font-size: 0.85em; font-weight: 700; color: var(--accent); }
         .hand-card-btn {
             width: 24px; height: 24px; border-radius: 50%; border: 1px solid #555;
             background: #2a2a2a; color: #ccc; font-size: 0.65em; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
         }
         .hand-card-btn:hover { border-color: #fff; color: #fff; background: #3a3a3a; }
         .hand-card-btn.remove:hover { border-color: #f44; color: #f44; background: #3a1a1a; }
+        .hand-card-upgrade {
+            position: absolute; top: 4px; right: 4px; width: 30px; height: 30px;
+            border-radius: 50%; border: 1px solid #555; background: #2a2a2a;
+            color: #ccc; font-size: 0.75em; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2; transition: all 0.2s ease;
+        }
+        .hand-card-upgrade:hover { border-color: #ffd54f; color: #ffd54f; }
         .hand-empty { color: #555; font-size: 0.9em; padding: 24px; width: 100%; text-align: center; }
 
         .analysis-panel {
             width: 280px; flex-shrink: 0; overflow-y: auto;
             background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-            border-radius: 10px; padding: 16px;
+            border-radius: 14px; padding: 16px;
             font-size: 0.9em; color: var(--text-dim);
             display: flex; flex-direction: column; justify-content: space-between; gap: 14px;
         }
+        .analysis-panel::-webkit-scrollbar { width: 5px; }
+        .analysis-panel::-webkit-scrollbar-track { background: transparent; }
+        .analysis-panel::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
         .deck-summary { margin-bottom: 2px; }
         .deck-summary .big-rate { font-size: 2.2em; font-weight: 700; line-height: 1; }
         .deck-summary .big-rate.high { color: #4caf50; }
         .deck-summary .big-rate.mid { color: #ff9800; }
         .deck-summary .big-rate.low { color: #f44336; }
         .deck-summary .meta { font-size: 0.9em; color: var(--text-dim); margin-top: 4px; }
-        .radar-grid { display: flex; flex-direction: column; gap: 12px; }
-        .radar-item { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+        .radar-grid { display: flex; flex-direction: column; gap: 10px; }
+        .radar-item { display: flex; align-items: center; gap: 10px; }
         .radar-label { font-size: 0.9em; color: var(--text-dim); width: 50px; text-align: right; flex-shrink: 0; }
-        .radar-bar-outer { height: 8px; background: #2a2a2a; border-radius: 4px; overflow: hidden; flex: 1; }
-        .radar-bar-inner { height: 100%; border-radius: 4px; transition: width 0.4s; }
+        .radar-bar-outer { height: 8px; background: #2a2a2a; border-radius: 6px; overflow: hidden; flex: 1; }
+        .radar-bar-inner { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
         .radar-value { font-size: 1em; font-weight: 700; width: 40px; text-align: right; flex-shrink: 0; }
         .survival-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-        .survival-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.82em; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .survival-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.82em; font-weight: 600; display: flex; align-items: center; gap: 4px; }
         .survival-badge.safe { background: rgba(76,175,80,0.15); color: #4caf50; }
         .survival-badge.warn { background: rgba(255,152,0,0.15); color: #ff9800; }
         .survival-badge.danger { background: rgba(244,67,54,0.15); color: #f44336; }
         .tips-section { font-size: 0.85em; line-height: 1.8; }
 
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        @keyframes shimmer {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-        }
+        @keyframes shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
         .recommend-zone { flex: 1; padding: 8px 16px; border-top: 1px solid var(--border); overflow-y: auto; }
+        .recommend-zone::-webkit-scrollbar { width: 5px; }
+        .recommend-zone::-webkit-scrollbar-track { background: transparent; }
+        .recommend-zone::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
         .recommend-zone h3 { font-size: 0.9em; color: var(--text-dim); font-weight: 500; margin-bottom: 8px; }
         .recommend-zone h3 span { color: var(--accent); }
         .rec-grid { display: flex; gap: 10px; flex-wrap: wrap; }
         .rec-card {
-            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
-            padding: 10px 12px; display: flex; gap: 10px; cursor: pointer; transition: all 0.15s; align-items: flex-start;
+            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 14px;
+            padding: 10px 12px; display: flex; gap: 10px; cursor: pointer;
+            transition: all 0.2s ease; align-items: flex-start;
             width: 360px; flex-shrink: 0;
         }
         .rec-card:hover { border-color: var(--accent); background: #282828; }
         .rec-card.top { border-color: var(--gold); background: #252520; }
         .rec-card-img {
-            width: 165px; height: 220px; border-radius: 8px; flex-shrink: 0;
+            width: 165px; height: 220px; border-radius: 12px; flex-shrink: 0;
             background: #2a2a2a; overflow: hidden; cursor: default;
         }
         .rec-card-img img { width: 100%; height: 100%; object-fit: cover; }
@@ -192,7 +206,7 @@
 
         .card-preview {
             display: none; position: fixed; z-index: 9999; pointer-events: none;
-            width: 330px; height: 440px; border-radius: 12px;
+            width: 330px; height: 440px; border-radius: 16px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.7);
             border: 3px solid var(--gold); overflow: hidden; background: #1a1a1a;
         }
@@ -203,20 +217,38 @@
 
         .toast {
             position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-            background:#333; color:#fff; padding:10px 24px; border-radius:8px;
-            font-size:0.9em; z-index:999; opacity:1; transition:opacity 0.3s; pointer-events:none;
+            background:#333; color:#fff; padding:10px 24px; border-radius:10px;
+            font-size:0.9em; z-index:999; opacity:1; transition: opacity 0.3s ease; pointer-events:none;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 900px) {
             .app { flex-direction: column; }
-            .sidebar { width: 100%; max-height: 35vh; }
-            .mini-card { width: 130px; height: 173px; }
-            .hand-card { width: 130px; }
-            .hand-card .hand-card-img-wrap { height: 173px; }
-            .deck-content { flex-direction: column; }
-            .analysis-panel { width: 100%; flex-shrink: 0; }
-            .rec-card { width: 100%; }
-            .rec-card-img { width: 130px; height: 173px; }
+            .sidebar { width: 100%; height: 40vh; flex-shrink: 0; }
+            .sidebar-header { padding: 8px 12px; }
+            .sidebar-header h2 { font-size: 1em; }
+            .filter-chip { font-size: 0.7em; padding: 3px 8px; }
+            .search-box { font-size: 0.78em; padding: 6px 10px; }
+            .mini-card { width: 100px; height: 133px; }
+            .card-grid { gap: 6px; padding: 6px; }
+            .deck-zone { padding: 8px 12px; flex: 1; }
+            .deck-zone-header h3 { font-size: 0.85em; }
+            .deck-content { flex-direction: column; gap: 8px; }
+            .hand-cards { gap: 6px; }
+            .hand-card { width: 100px; }
+            .hand-card .hand-card-img-wrap { height: 133px; }
+            .analysis-panel { width: 100%; flex-shrink: 0; flex-direction: row; gap: 8px; font-size: 0.78em; padding: 8px; }
+            .radar-grid { flex-direction: row; flex-wrap: wrap; gap: 4px; }
+            .radar-item { flex: 1; min-width: 60px; }
+            .radar-label { font-size: 0.65em; width: auto; }
+            .radar-value { font-size: 0.8em; width: auto; }
+            .recommend-zone { padding: 6px 10px; }
+            .recommend-zone h3 { font-size: 0.8em; }
+            .rec-card { width: 100%; min-width: auto; padding: 8px; gap: 8px; }
+            .rec-card-img { width: 100px; height: 133px; }
+            .rec-card-name { font-size: 0.85em; }
+            .rec-card-rate { font-size: 1.1em; }
+            .btn-reset, .btn-clear { font-size: 0.7em; padding: 4px 10px; }
+            .card-preview { width: 200px; height: 267px; }
         }
     </style>
 </head>

@@ -1,4 +1,4 @@
-// ===== 杀戮尖塔2 鸡煲卡牌搭配助手 v5.9 =====
+// ===== 杀戮尖塔2 鸡煲卡牌搭配助手 v6.1 =====
 let selected = [];
 let rarityF = 'all', typeF = 'all';
 
@@ -25,9 +25,9 @@ function toast(msg) {
     toastTimer = setTimeout(function(){ t.style.opacity = '0'; }, 2000);
 }
 
-function getCardCounts() { var counts = {}; for (var i = 0; i < selected.length; i++) { var id = selected[i]; counts[id] = (counts[id] || 0) + 1; } return counts; }
+function getCardCounts() { var counts = {}; for (var i = 0; i < selected.length; i++) { var id = selected[i].id; counts[id] = (counts[id] || 0) + 1; } return counts; }
+function getUpgradedCounts() { var counts = {}; for (var i = 0; i < selected.length; i++) { var id = selected[i].id; if (selected[i].upgraded) counts[id] = (counts[id] || 0) + 1; } return counts; }
 
-// ===== 悬停预览 =====
 var previewEl = null;
 function getPreviewEl() { if (!previewEl) { previewEl = document.createElement('div'); previewEl.className = 'card-preview'; document.body.appendChild(previewEl); } return previewEl; }
 function showPreview(e, cardData) {
@@ -55,22 +55,31 @@ function renderPool() {
     }
 }
 
-function add(id) { if (selected.length >= 40) { toast('牌库最多40张'); return; } selected.push(id); renderAll(); }
-function removeOne(id) { var idx = selected.lastIndexOf(id); if (idx !== -1) { selected.splice(idx, 1); } renderAll(); }
-function removeAll(id) { selected = selected.filter(function(i) { return i !== id; }); renderAll(); }
+function add(id) { if (selected.length >= 40) { toast('牌库最多40张'); return; } selected.push({ id: id, upgraded: false }); renderAll(); }
+function removeOne(id) { for (var i = selected.length - 1; i >= 0; i--) { if (selected[i].id === id) { selected.splice(i, 1); break; } } renderAll(); }
+function removeAll(id) { selected = selected.filter(function(item) { return item.id !== id; }); renderAll(); }
+function toggleUpgrade(cardId) { for (var i = 0; i < selected.length; i++) { if (selected[i].id === cardId) { selected[i].upgraded = !selected[i].upgraded; break; } } renderAll(); }
 
 function renderHand() {
     $hand.innerHTML = ''; $selCount.textContent = selected.length;
     if (selected.length === 0) { $hand.innerHTML = '<div class="hand-empty">初始牌库已加载，点击左侧卡牌继续添加</div>'; return; }
-    var counts = getCardCounts(); var rendered = {};
+    var counts = {}; for (var i = 0; i < selected.length; i++) { var sid = selected[i].id; counts[sid] = (counts[sid] || 0) + 1; }
+    var rendered = {};
     for (var i = 0; i < selected.length; i++) {
-        var id = selected[i]; if (rendered[id]) continue; rendered[id] = true;
+        var item = selected[i]; var id = item.id;
+        if (rendered[id]) continue; rendered[id] = true;
         var c = getCardById(id); if (!c) continue; var count = counts[id];
         var div = document.createElement('div'); div.className = 'hand-card';
         var imgWrap = document.createElement('div'); imgWrap.className = 'hand-card-img-wrap';
-        if (c.image) { var imgEl = document.createElement('img'); imgEl.src = c.image; imgEl.alt = c.name; imgWrap.appendChild(imgEl); }
+        if (c.image) { var imgEl = document.createElement('img'); imgEl.src = item.upgraded && c.upgradedImage ? c.upgradedImage : c.image; imgEl.alt = c.name; imgWrap.appendChild(imgEl); }
         else { var emojiDiv = document.createElement('div'); emojiDiv.className = 'card-emoji'; emojiDiv.style.background = c.cssBg || '#2a2a2a'; emojiDiv.textContent = getTypeEmoji(c.type); imgWrap.appendChild(emojiDiv); }
         div.appendChild(imgWrap);
+        var upgradeBtn = document.createElement('button');
+        upgradeBtn.textContent = item.upgraded ? '✨' : '🔨';
+        upgradeBtn.title = item.upgraded ? '已敲' : '未敲';
+        upgradeBtn.style.cssText = 'position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:50%;border:1px solid ' + (item.upgraded ? '#ffd54f' : '#555') + ';background:#2a2a2a;color:' + (item.upgraded ? '#ffd54f' : '#ccc') + ';font-size:0.75em;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;';
+        (function(cardId) { upgradeBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleUpgrade(cardId); }); })(id);
+        div.appendChild(upgradeBtn);
         var bottom = document.createElement('div'); bottom.className = 'hand-card-bottom';
         var minusBtn = document.createElement('button'); minusBtn.className = 'hand-card-btn remove'; minusBtn.textContent = '−'; minusBtn.title = '移除1张';
         var countEl = document.createElement('span'); countEl.className = 'hand-card-count'; countEl.textContent = count;
@@ -79,7 +88,7 @@ function renderHand() {
         (function(cardId) { minusBtn.addEventListener('click', function(e) { e.stopPropagation(); removeOne(cardId); }); plusBtn.addEventListener('click', function(e) { e.stopPropagation(); add(cardId); }); delBtn.addEventListener('click', function(e) { e.stopPropagation(); removeAll(cardId); }); })(id);
         bottom.appendChild(minusBtn); bottom.appendChild(countEl); bottom.appendChild(plusBtn); bottom.appendChild(delBtn);
         div.appendChild(bottom);
-        (function(cardData) { div.addEventListener('mouseenter', function(e) { showPreview(e, cardData); }); div.addEventListener('mousemove', function(e) { movePreview(e); }); div.addEventListener('mouseleave', hidePreview); })(c);
+        (function(cardData, isUpgraded) { var previewData = isUpgraded && cardData.upgradedImage ? { image: cardData.upgradedImage, name: cardData.name + '+', cssBg: cardData.cssBg, type: cardData.type } : cardData; div.addEventListener('mouseenter', function(e) { showPreview(e, previewData); }); div.addEventListener('mousemove', function(e) { movePreview(e); }); div.addEventListener('mouseleave', hidePreview); })(c, item.upgraded);
         $hand.appendChild(div);
     }
 }
@@ -100,7 +109,8 @@ function analyzeDuplicates(counts) {
 
 function analyzeHand() {
     if (selected.length === 0) return null;
-    var counts = getCardCounts(); var uniqueCards = Object.keys(counts).length; var deckSize = selected.length;
+    var counts = getCardCounts(); var upgradedCounts = getUpgradedCounts();
+    var uniqueCards = Object.keys(counts).length; var deckSize = selected.length;
     var totalCost = 0, drawCards = 0, totalDraw = 0, energyGen = 0, totalDamage = 0, totalBlock = 0;
     var zeroCostAtk = 0, powerCount = 0, keyCards = 0;
     var typeCount = { attack: 0, skill: 0, power: 0 };
@@ -110,6 +120,19 @@ function analyzeHand() {
     var highCostCards = 0, veryHighCostCards = 0, blockCards = 0, attackCards = 0;
     var orbSources = 0, lightningSources = 0, darkSources = 0, statusSources = 0, consumeSources = 0;
     var thunderCount = 0, teslaCount = 0, barrageCount = 0, compactCount = 0, wasteToWealthCount = 0;
+    var totalUpgradedWeight = 0;
+    var keyUpgrades = ['defect_defragment', 'defect_echo_form', 'defect_biased_cognition', 'defect_darkness', 
+        'defect_tempest', 'defect_glacier', 'defect_claw', 'defect_scrape',
+        'defect_capacitor', 'defect_multicast', 'defect_quad_release', 'defect_shatter', 'defect_voltaic',
+        'defect_core_accel', 'defect_double_energy', 'defect_supercritical', 'defect_coolheaded',
+        'defect_compact', 'defect_flak_cannon', 'defect_loop', 'defect_buffer', 'defect_hologram',
+        'defect_chaos', 'defect_zap', 'defect_dualcast', 'defect_white_noise', 'defect_energy_surge',
+        'defect_scavenge', 'defect_ignite', 'defect_barrage', 'defect_go_for_the_eyes', 'defect_beam_cell',
+        'defect_tesla_coil', 'defect_rocket_punch', 'defect_chill', 'defect_sync', 'defect_fusion',
+        'defect_modded', 'defect_signal_boost', 'defect_rainbow', 'defect_storm', 'defect_subroutine',
+        'defect_bulk_up', 'defect_creative_ai'];
+    var lowUpgrades = ['defect_strike', 'defect_defend', 'defect_leap', 'defect_charge',
+        'defect_quick_escape', 'defect_sweeping_beam', 'defect_all_for_one', 'defect_skimming'];
 
     for (var id in counts) { var c = getCardById(id); if (!c) continue; var count = counts[id];
         totalCost += c.cost * count; typeCount[c.type] = (typeCount[c.type] || 0) + count;
@@ -165,6 +188,9 @@ function analyzeHand() {
         if (c.rarity === 'rare' || c.rarity === 'ancient') keyCards += count;
     }
 
+    for (var id in upgradedCounts) { if (keyUpgrades.indexOf(id) !== -1) totalUpgradedWeight += upgradedCounts[id] * 3; else if (lowUpgrades.indexOf(id) !== -1) totalUpgradedWeight += upgradedCounts[id] * 0.5; else totalUpgradedWeight += upgradedCounts[id] * 1.5; }
+    var upgradedRatio = deckSize > 0 ? totalUpgradedWeight / (deckSize * 1.5) : 0;
+
     var isClawDeck = hasAllForOne && hasClaw && clawCount >= 2;
     var isFrostDeck = (counts['defect_defragment'] || 0) >= 1 && (counts['defect_glacier'] || 0) >= 1;
     var isLightningDeck = (counts['defect_tempest'] || 0) >= 1 && (counts['defect_ball_lightning'] || 0) >= 2;
@@ -177,19 +203,27 @@ function analyzeHand() {
     var drawDensity = deckSize > 0 ? (drawCards / deckSize * 100) : 0;
     var cardsPlayedPerTurn = avgCost > 0 ? Math.min(5, Math.floor(3 / avgCost) + 1) : 5;
     var avgBlockPerTurn = (totalBlock / Math.max(1, deckSize)) * cardsPlayedPerTurn;
-    var basicPenalty = 0;
-    if (basicCount > 3) basicPenalty += (basicCount - 3) * 5;
-    if (basicCount > 7) basicPenalty += (basicCount - 7) * 8;
+
+    var basicPenalty = 0; var basicAtkDefCount = 0;
+    for (var id in counts) { var c = getCardById(id); if (c && c.rarity === 'basic' && (c.id === 'defect_strike' || c.id === 'defect_defend')) { basicAtkDefCount += counts[id]; } }
+    var nonBasicCount = deckSize - basicAtkDefCount;
+    if (nonBasicCount === 0) { basicPenalty = 100; } else if (nonBasicCount <= 3) { basicPenalty = Math.max(0, (basicAtkDefCount - 2) * 3); } else { basicPenalty = Math.max(0, (basicAtkDefCount - 2) * 2); if (basicAtkDefCount > 6) basicPenalty += (basicAtkDefCount - 6) * 3; }
     var dupAnalysis = analyzeDuplicates(counts);
 
     var drawScore = Math.min(100, drawDensity * 2.5);
     if (compactCount >= 1 && statusSources >= 4) drawScore = Math.min(100, drawScore * 1.4); else if (compactCount >= 1 && statusSources >= 2) drawScore = Math.min(100, drawScore * 1.2);
-    if (deckSize > 20 && drawDensity < 18) drawScore *= 0.7; if (deckSize > 30 && drawDensity < 22) drawScore *= 0.5; if (deckSize > 35 && drawDensity < 28) drawScore *= 0.35;
+    if (deckSize > 20) { var drawPenalty = Math.max(0, (deckSize - 20) * 1.5 - drawDensity * 0.8); drawScore = Math.max(10, drawScore - drawPenalty); }
+
     var curveScore = 100;
-    if (avgCost > 2.5) curveScore = 35; else if (avgCost > 2.0) curveScore = 60; else if (avgCost > 1.5) curveScore = 85; else if (avgCost < 0.8) curveScore = 65;
-    if (energyGen > deckSize * 0.1 && avgCost > 1.8) curveScore += 12; if (highCostCount > deckSize * 0.2) curveScore -= 15;
+    if (avgCost > 3.0) curveScore = 20;
+    else if (avgCost > 2.5) curveScore = Math.max(20, Math.round(100 - (avgCost - 1.5) * 50));
+    else if (avgCost > 1.5) curveScore = Math.max(40, Math.round(100 - (avgCost - 1.5) * 30));
+    else if (avgCost < 0.8) curveScore = Math.max(40, Math.round(100 - (1.0 - avgCost) * 50));
+    if (energyGen > deckSize * 0.1) curveScore = Math.min(100, curveScore + 15);
+    if (highCostCount > deckSize * 0.3) curveScore = Math.max(10, curveScore - 20);
     if (compactCount >= 1 && statusSources >= 3) curveScore = Math.min(100, curveScore + 10);
     if (wasteToWealthCount >= 1 && statusSources >= 3) curveScore = Math.min(100, curveScore + 5);
+    curveScore = Math.min(100, Math.round(curveScore * (1 + upgradedRatio * 0.25)));
 
     var atkPerTurn = Math.max(1, Math.min(5, Math.floor(3 / Math.max(0.5, avgCost)) + 1));
     var atkRatio = deckSize > 0 ? attackCards / deckSize : 0;
@@ -201,6 +235,8 @@ function analyzeHand() {
     // ===== 闪电流 =====
     var hasEnergySupport = (counts['defect_core_accel'] || 0) + (counts['defect_double_energy'] || 0) + (counts['defect_supercritical'] || 0) + (counts['defect_energy_surge'] || 0) >= 1;
     var hasStrongEnergy = (counts['defect_core_accel'] || 0) + (counts['defect_double_energy'] || 0) + (counts['defect_supercritical'] || 0) >= 2;
+    var upgradedEnergyCount = (upgradedCounts['defect_core_accel'] || 0) + (upgradedCounts['defect_double_energy'] || 0) + (upgradedCounts['defect_supercritical'] || 0) + (upgradedCounts['defect_energy_surge'] || 0);
+    var energyQuality = hasStrongEnergy ? (upgradedEnergyCount >= 2 ? 1.4 : 1.1) : (upgradedEnergyCount >= 1 ? 1.15 : 1.0);
     var hasThunder = thunderCount >= 1;
     var hasTesla = teslaCount >= 1;
     var hasVoltaic = (counts['defect_voltaic'] || 0) >= 1;
@@ -208,19 +244,32 @@ function analyzeHand() {
     var hasLightningRod = (counts['defect_lightning_rod'] || 0) >= 1;
     var hasHologram = (counts['defect_hologram'] || 0) >= 1;
     var hasTempest = (counts['defect_tempest'] || 0) >= 1;
+
     var lightningMultiplier = 1.0;
-    if (hasTempest && lightningSources >= 3) {
-        lightningMultiplier = 1.3;
-        if (hasEnergySupport) { lightningMultiplier *= 1.8; if (hasStrongEnergy) lightningMultiplier *= 1.2; }
-        if (hasThunder) { lightningMultiplier *= (1.4 + thunderCount * 0.2); }
-        if (hasTesla) { lightningMultiplier *= 1.3; }
-        if (hasVoltaic) { lightningMultiplier *= hasEnergySupport ? 2.5 : 1.5; }
-        if (hasHologram) { lightningMultiplier *= 1.25; }
-        if (hasBallLightning) { lightningMultiplier *= 1.15; }
-        if (hasLightningRod) { lightningMultiplier *= 1.1; }
+    if (hasTempest && lightningSources >= 3 && hasEnergySupport) {
+        lightningMultiplier = 1.2 * energyQuality;
+        if (hasThunder) { lightningMultiplier *= (1.2 + thunderCount * 0.15); }
+        if (hasTesla) { lightningMultiplier *= 1.2; }
+        if (hasVoltaic) { lightningMultiplier *= 1.8; }
+        if (hasHologram) { lightningMultiplier *= 1.15; }
+        if (hasBallLightning) { lightningMultiplier *= 1.1; }
+        if (hasLightningRod) { lightningMultiplier *= 1.08; }
+    } else if (hasTempest && lightningSources >= 3) {
+        lightningMultiplier = 1.05;
     }
-    if (!hasTempest && hasBallLightning && hasTesla) { lightningMultiplier = Math.max(lightningMultiplier, 1.5); if (hasThunder) lightningMultiplier *= 1.3; }
-    if (lightningMultiplier > 1.0) { systemBonus = Math.max(systemBonus, Math.min(1.5, lightningMultiplier - 1.0)); }
+    if (!hasTempest && hasBallLightning && hasTesla) { lightningMultiplier = Math.max(lightningMultiplier, 1.3); if (hasThunder) lightningMultiplier *= 1.2; }
+    if (lightningMultiplier > 1.0) { systemBonus = Math.max(systemBonus, Math.min(1.2, lightningMultiplier - 1.0)); }
+
+    // ===== 特斯拉线圈独立计算 =====
+    if (hasTesla) {
+        var teslaBonus = 0.05;
+        if ((upgradedCounts['defect_tesla_coil'] || 0) >= 1) teslaBonus += 0.08;
+        if (hasCapacitor) teslaBonus += 0.03;
+        if (hasAllForOne) teslaBonus += 0.03;
+        if (drawDensity >= 20) teslaBonus += 0.03;
+        else if (drawDensity >= 12) teslaBonus += 0.01;
+        systemBonus += teslaBonus;
+    }
 
     // ===== 黑暗球体系 =====
     var hasDarkness2 = (counts['defect_darkness'] || 0) >= 1;
@@ -235,22 +284,39 @@ function analyzeHand() {
     var hasSupercritical = (counts['defect_supercritical'] || 0) >= 1;
     var darkBonus = 0;
     if (hasDarkness2 && hasMulticast && darkSources >= 2) {
-        darkBonus = 40;
-        if (hasMultiDarkness) darkBonus += 25;
-        if (hasConsumingShadow) darkBonus += 25;
-        if (hasShatter) darkBonus += 35;
-        if (hasQuadRelease) darkBonus += 40;
-        if (hasShatter && hasQuadRelease) darkBonus += 20;
-        if (hasLoop) darkBonus += 15;
-        if (hasShadowShield) darkBonus += 10;
-        if (hasNull) darkBonus += 8;
-        if (hasDualcast) darkBonus += 12;
-        if (hasSupercritical) darkBonus += 12;
-        if (hasHologram) darkBonus += 10;
-        if (darkSources >= 3) darkBonus += 15;
-        if (darkSources >= 4) darkBonus += 15;
-        if (darkSources >= 5) darkBonus += 10;
+        darkBonus = 10;
+        if (hasMultiDarkness) darkBonus += 28;
+        if (hasConsumingShadow) darkBonus += 24;
+        if (hasShatter) darkBonus += 20;
+        if (hasQuadRelease) darkBonus += 64;
+        if (hasShatter && hasQuadRelease) darkBonus += 24;
+        if (hasLoop) darkBonus += 12;
+        if (hasShadowShield) darkBonus += 20;
+        if (hasNull) darkBonus += 16;
+        if (hasDualcast) darkBonus += 10;
+        if (hasSupercritical) darkBonus += 10;
+        if (hasHologram) darkBonus += 8;
+        if (darkSources >= 3) darkBonus += 12;
+        if (darkSources >= 4) darkBonus += 12;
+        if (darkSources >= 5) darkBonus += 8;
+    } else if (hasDarkness2 && darkSources >= 2) {
+        darkBonus = 8;
+    } else if (hasDarkness2) {
+        darkBonus = 2;
     }
+
+    // ===== 四重释放多维度加成 =====
+    if (hasQuadRelease) {
+        if (hasDarkness2) { dmgScore = Math.max(dmgScore || 0, 70); }
+        if (hasGlacier || frostOrbs >= 2) { defScore = Math.max(defScore || 0, 60); }
+        if (hasFusion || hasMeteorStrike) { curveScore = Math.min(100, curveScore + 15); }
+        loopScore = Math.max(loopScore || 0, 75);
+    }
+
+    // ===== 多重释放全局加成 =====
+    var hasEnergyForMulticast = (counts['defect_core_accel'] || 0) + (counts['defect_double_energy'] || 0) + (counts['defect_supercritical'] || 0) + (counts['defect_fusion'] || 0) + (counts['defect_energy_surge'] || 0) >= 1;
+    if (hasMulticast && hasEnergyForMulticast) { systemBonus += 0.25; }
+    else if (hasMulticast) { systemBonus += 0.02; }
 
     // ===== 状态流 =====
     if (isStatusDeck && statusSources >= 6 && compactCount >= 1) systemBonus = Math.max(systemBonus, 0.8);
@@ -278,14 +344,9 @@ function analyzeHand() {
     var hasSpinCraft = (counts['defect_spin_craft'] || 0) >= 1;
     var glassMultiplier = 1.0;
     if ((hasRefract || hasGlassCraft || hasSpinCraft) && orbSources >= 3) {
-        glassMultiplier = 1.3;
-        if (hasRefract) glassMultiplier *= 1.4;
-        if (hasGlassCraft) glassMultiplier *= 1.2;
-        if (hasSpinCraft) glassMultiplier *= 1.6;
-        if (hasDefrag) glassMultiplier *= 1.5;
-        if (hasShatter) glassMultiplier *= 1.4;
-        if (hasConsumingShadow) glassMultiplier *= 1.3;
-        if (hasCapacitor) glassMultiplier *= 1.2;
+        glassMultiplier = 1.3; if (hasRefract) glassMultiplier *= 1.4; if (hasGlassCraft) glassMultiplier *= 1.2;
+        if (hasSpinCraft) glassMultiplier *= 1.6; if (hasDefrag) glassMultiplier *= 1.5; if (hasShatter) glassMultiplier *= 1.4;
+        if (hasConsumingShadow) glassMultiplier *= 1.3; if (hasCapacitor) glassMultiplier *= 1.2;
     }
     if (glassMultiplier > 1.0) { systemBonus = Math.max(systemBonus, Math.min(1.5, glassMultiplier - 1.0)); }
 
@@ -295,25 +356,16 @@ function analyzeHand() {
     var plasmaCount = (counts['defect_fusion'] || 0) + (counts['defect_meteor_strike'] || 0) * 3;
     var plasmaMultiplier = 1.0;
     if (plasmaCount >= 2) {
-        plasmaMultiplier = 1.2 + plasmaCount * 0.05;
-        if (hasFusion && hasMeteorStrike) plasmaMultiplier *= 1.4;
-        if (hasDualcast) plasmaMultiplier *= 1.2;
-        if (hasQuadRelease) plasmaMultiplier *= 1.5;
-        if (hasMulticast) plasmaMultiplier *= 1.3;
-        if (hasLoop) plasmaMultiplier *= 1.3;
-        if (hasSupercritical) plasmaMultiplier *= 1.2;
-        if (hasSpiralDrill) plasmaMultiplier *= 1.4;
-        if (hasTempest) plasmaMultiplier *= 1.3;
+        plasmaMultiplier = 1.2 + plasmaCount * 0.05; if (hasFusion && hasMeteorStrike) plasmaMultiplier *= 1.4;
+        if (hasDualcast) plasmaMultiplier *= 1.2; if (hasQuadRelease) plasmaMultiplier *= 1.5; if (hasMulticast) plasmaMultiplier *= 1.3;
+        if (hasLoop) plasmaMultiplier *= 1.3; if (hasSupercritical) plasmaMultiplier *= 1.2; if (hasSpiralDrill) plasmaMultiplier *= 1.4; if (hasTempest) plasmaMultiplier *= 1.3;
     }
-    if (plasmaMultiplier > 1.0) {
-        curveScore = Math.min(100, Math.round(curveScore * Math.min(1.3, plasmaMultiplier)));
-        systemBonus = Math.max(systemBonus, Math.min(1.2, plasmaMultiplier - 1.0));
-    }
+    if (plasmaMultiplier > 1.0) { curveScore = Math.min(100, Math.round(curveScore * Math.min(1.3, plasmaMultiplier))); systemBonus = Math.max(systemBonus, Math.min(1.2, plasmaMultiplier - 1.0)); }
 
     if (isDarkDeck && hasMulticast && darkSources >= 3) { systemBonus += 0.15; }
     if (isDarkDeck && hasMulticast && darkSources >= 4) { systemBonus += 0.15; }
     var totalBonus = Math.min(1.0, drawBonus + energyBonus + systemBonus);
-    var dmgScore = Math.min(100, Math.round(baseDmgPerTurn * 2.2 * (1 + totalBonus)));
+    var dmgScore = Math.min(100, Math.round(baseDmgPerTurn * 1.6 * (1 + totalBonus) * (1 + upgradedRatio * 0.25)));
     if (darkBonus > 0) { dmgScore = Math.min(100, dmgScore + darkBonus); }
     if (attackCards < 2 && systemBonus < 0.3) dmgScore = Math.min(dmgScore, 30);
 
@@ -337,24 +389,16 @@ function analyzeHand() {
     var frostMultiplier = 1.0;
     if (isFrostDeck && hasDefrag && frostOrbs >= 3) {
         frostMultiplier = 1.5 + frostOrbs * 0.08;
-        if (hasGlacier) frostMultiplier *= 1.35;
-        if (hasCoolheaded) frostMultiplier *= 1.25;
-        if (hasColdSnap) frostMultiplier *= 1.15;
-        if (hasIceLance) frostMultiplier *= 1.3;
-        if (hasChill) frostMultiplier *= 1.2;
-        if (hasCoolant) frostMultiplier *= 1.3;
-        if (hasBlizzard) frostMultiplier *= 1.15;
-        if (hasHailstorm) frostMultiplier *= 1.2;
-        if (hasCapacitor) frostMultiplier *= 1.4;
-        if (hasEcho) frostMultiplier *= 1.5;
-        if (hasLoop) frostMultiplier *= 1.2;
-        if (hasHologram) frostMultiplier *= 1.15;
+        if (hasGlacier) frostMultiplier *= 1.35; if (hasCoolheaded) frostMultiplier *= 1.25; if (hasColdSnap) frostMultiplier *= 1.15;
+        if (hasIceLance) frostMultiplier *= 1.3; if (hasChill) frostMultiplier *= 1.2; if (hasCoolant) frostMultiplier *= 1.3;
+        if (hasBlizzard) frostMultiplier *= 1.15; if (hasHailstorm) frostMultiplier *= 1.2; if (hasCapacitor) frostMultiplier *= 1.4;
+        if (hasEcho) frostMultiplier *= 1.5; if (hasLoop) frostMultiplier *= 1.2; if (hasHologram) frostMultiplier *= 1.15;
     }
     var defSystemBonus = 0;
     if (frostMultiplier > 1.0) { defSystemBonus = Math.max(defSystemBonus, Math.min(1.2, frostMultiplier - 1.0)); }
 
     var loopScore = 0;
-    if (hasAllForOne && hasClaw && clawCount >= 3 && hasScrape && drawDensity >= 20 && defScore >= 30) loopScore = 99;
+    if (hasAllForOne && hasClaw && clawCount >= 3 && hasScrape && drawDensity >= 20) loopScore = 99;
     else if (hasAllForOne && hasClaw && clawCount >= 3 && hasScrape && drawDensity >= 15) loopScore = 88;
     else if (hasAllForOne && hasClaw && clawCount >= 3 && drawDensity >= 15) loopScore = 85;
     else if (hasAllForOne && hasClaw && clawCount >= 3) loopScore = 72;
@@ -370,20 +414,18 @@ function analyzeHand() {
     else if (isStatusDeck && statusSources >= 4) loopScore = 72;
     else if (isEnergyDeck && energyGen >= 5 && hasSpiralDrill && drawDensity >= 15) loopScore = 82;
     else if (isEnergyDeck && energyGen >= 5 && hasSpiralDrill) loopScore = 68;
-    else if (hasDarkness2 && hasMulticast && darkSources >= 3 && drawDensity >= 10) loopScore = 78;
-    else if (hasDarkness2 && hasMulticast) loopScore = 65;
-    else if (hasVoltaic && lightningSources >= 5 && drawDensity >= 12) loopScore = 82;
-    else if (hasVoltaic && lightningSources >= 5) loopScore = 65;
     else if (drawDensity > 35 && avgCost < 1.5) loopScore = 62;
     else loopScore = Math.min(45, drawScore * 0.5);
+    loopScore = Math.min(100, Math.round(loopScore * (1 + upgradedRatio * 0.2)));
 
     var loopDefBonus = 0; if (loopScore >= 90) loopDefBonus = 0.6; else if (loopScore >= 80) loopDefBonus = 0.4; else if (loopScore >= 70) loopDefBonus = 0.2;
     var wasteToWealthDefBonus = 0; if (wasteToWealthCount >= 1 && statusSources >= 3) wasteToWealthDefBonus = 0.15;
     var totalDefBonus = Math.min(0.8, drawBonus + energyBonus + Math.max(defSystemBonus, loopDefBonus, 0) + wasteToWealthDefBonus);
-    var defScore = Math.min(100, Math.round((baseDefPerTurn + frostDefense + coolantBonus + bufferBonus + geneticBonus) * 1.8 * (1 + totalDefBonus)));
+    var defScore = Math.min(100, Math.round((baseDefPerTurn + frostDefense + coolantBonus + bufferBonus + geneticBonus) * 1.8 * (1 + totalDefBonus) * (1 + upgradedRatio * 0.25)));
     if (typeCount.skill < 2 && frostOrbs < 2 && bufferBonus === 0) defScore = Math.min(defScore, 40);
+    if (hasShadowShield && hasDarkness2) { defScore = Math.min(100, defScore + 8); }
 
-    // ===== 爪击流（移到defScore之后） =====
+    // ===== 爪击流 =====
     if (hasClaw && hasAllForOne) {
         var clawBase = 0;
         if (clawCount >= 3 && hasScrape && drawDensity >= 20 && defScore >= 30) { clawBase = 0.9; }
@@ -402,29 +444,34 @@ function analyzeHand() {
         if (!found && c2.synergies) { for (var k = 0; k < c2.synergies.length; k++) { if (c2.synergies[k].cardId === c1.id) { synPairs++; if (c2.synergies[k].winRate > bestRate) { bestRate = c2.synergies[k].winRate; bestPair = c2.name + ' + ' + c1.name; } break; } } }
     } }
     var synCoverage = totalPairs > 0 ? (synPairs / totalPairs * 100) : 0;
-    var deckSizePenalty = 0;
-    if (deckSize > 18) deckSizePenalty += (deckSize - 18) * 0.5;
-    if (deckSize > 28) deckSizePenalty += (deckSize - 28) * 0.7;
-    if (deckSize > 35) deckSizePenalty += (deckSize - 35) * 1.2;
-    var tooSmallPenalty = 0;
-    if (deckSize < 8) tooSmallPenalty = (8 - deckSize) * 8;
-    if (deckSize < 5) tooSmallPenalty = 50;
+    var deckSizePenalty = 0; if (deckSize > 18) deckSizePenalty += (deckSize - 18) * 0.5; if (deckSize > 28) deckSizePenalty += (deckSize - 28) * 0.7; if (deckSize > 35) deckSizePenalty += (deckSize - 35) * 1.2;
+    var tooSmallPenalty = 0; if (deckSize < 8) tooSmallPenalty = (8 - deckSize) * 8; if (deckSize < 5) tooSmallPenalty = 50;
 
     var rawWinRate = (drawScore * 0.15 + curveScore * 0.12 + dmgScore * 0.18 + defScore * 0.18 + loopScore * 0.18 + synCoverage * 0.10) * 0.7 + 15;
     var finalWinRate = Math.max(0, Math.min(98, Math.round(rawWinRate - deckSizePenalty - basicPenalty - tooSmallPenalty - dupAnalysis.penalty + dupAnalysis.bonus)));
 
-    var blockRatio = deckSize > 0 ? blockCards / deckSize : 0; var attackRatio = deckSize > 0 ? attackCards / deckSize : 0; var drawRatio = deckSize > 0 ? drawCards / deckSize : 0;
-    var costBrick = 0, defBrick = 0, drawBrick = 0, atkBrick = 0;
-    if (deckSize >= 7 && highCostCards >= 4) { costBrick = 1; for (var i = 0; i < 4; i++) { if (highCostCards - i <= 0) { costBrick = 0; break; } costBrick *= (highCostCards - i) / (deckSize - i); } costBrick = Math.round(costBrick * 100); }
-    if (deckSize >= 7 && veryHighCostCards >= 2) { var cb2 = 1; for (var i = 0; i < 2; i++) { if (veryHighCostCards - i <= 0) { cb2 = 0; break; } cb2 *= (veryHighCostCards - i) / (deckSize - i); } costBrick = Math.max(costBrick, Math.round(cb2 * 100)); }
-    if (blockRatio < 0.20 && deckSize >= 7) { var nonBlock = deckSize - blockCards; if (nonBlock >= 7) { defBrick = 1; for (var i = 0; i < 7; i++) { if (nonBlock - i <= 0) { defBrick = 0; break; } defBrick *= (nonBlock - i) / (deckSize - i); } defBrick = Math.round(defBrick * 100); } } else if (blockRatio < 0.10) defBrick = 60;
-    if (drawRatio < 0.12 && deckSize > 15) { var nonDraw = deckSize - drawCards; if (nonDraw >= 5) { drawBrick = 1; for (var i = 0; i < 5; i++) { if (nonDraw - i <= 0) { drawBrick = 0; break; } drawBrick *= (nonDraw - i) / (deckSize - i); } drawBrick = Math.round(drawBrick * 100); } if (deckSize > 25) drawBrick = Math.min(80, drawBrick + 20); }
-    if (attackRatio < 0.18 && deckSize >= 7) { var nonAtk = deckSize - attackCards; if (nonAtk >= 5) { atkBrick = 1; for (var i = 0; i < 5; i++) { if (nonAtk - i <= 0) { atkBrick = 0; break; } atkBrick *= (nonAtk - i) / (deckSize - i); } atkBrick = Math.round(atkBrick * 100 * 0.7); } }
-    var brickProb = Math.max(costBrick, defBrick, drawBrick, atkBrick); var problemCount = (costBrick > 15 ? 1 : 0) + (defBrick > 15 ? 1 : 0) + (drawBrick > 15 ? 1 : 0) + (atkBrick > 15 ? 1 : 0);
-    if (problemCount >= 3) brickProb = Math.min(95, brickProb + 20); else if (problemCount >= 2) brickProb = Math.min(95, brickProb + 10);
+    // ===== 四维鬼抽（渐变评分） =====
+    var blockRatio = deckSize > 0 ? blockCards / deckSize : 0;
+    var attackRatio = deckSize > 0 ? attackCards / deckSize : 0;
+    var drawRatio = deckSize > 0 ? drawCards / deckSize : 0;
+    var highCostRatio = deckSize > 0 ? highCostCards / deckSize : 0;
+
+    var costBrick = Math.round(Math.min(50, highCostRatio * 120));
+    var defBrick = Math.round(Math.max(0, Math.min(50, (0.25 - blockRatio) * 180)));
+    var drawBrick = Math.round(Math.max(0, Math.min(50, (0.20 - drawRatio) * 180)));
+    if (deckSize > 25) drawBrick = Math.min(50, drawBrick + 10);
+    var atkBrick = Math.round(Math.max(0, Math.min(50, (0.20 - attackRatio) * 180)));
+
+    if (drawRatio > 0.20) {
+    costBrick = Math.max(0, costBrick - 8);
+    defBrick = Math.max(0, defBrick - 8);
+    atkBrick = Math.max(0, atkBrick - 8);
+    }
+
+    var brickProb = Math.max(costBrick, defBrick, drawBrick, atkBrick);
     var focus = hasDefrag ? (hasEcho ? 3 : 1.5) : 0; var frostPassive = Math.round(frostOrbs * (2 + focus));
 
-    return { deckSize: deckSize, uniqueCards: uniqueCards, drawScore: Math.round(drawScore), curveScore: Math.round(curveScore), dmgScore: dmgScore, defScore: defScore, loopScore: loopScore, synCoverage: Math.round(synCoverage), finalWinRate: finalWinRate, brickProb: brickProb, bestPair: bestPair, bestRate: bestRate, avgCost: avgCost.toFixed(1), drawDensity: Math.round(drawDensity), drawCards: drawCards, totalDraw: totalDraw, zeroCostAtk: zeroCostAtk, hasAllForOne: hasAllForOne, hasClaw: hasClaw, clawCount: clawCount, typeCount: typeCount, deckSizePenalty: Math.round(deckSizePenalty), basicPenalty: Math.round(basicPenalty), dupAnalysis: dupAnalysis, energyGen: energyGen, basicCount: basicCount, highCostCount: highCostCount, avgBlockPerTurn: Math.round(avgBlockPerTurn), frostPassive: frostPassive, totalDamage: totalDamage, totalBlock: totalBlock, counts: counts, costBrick: costBrick, defBrick: defBrick, drawBrick: drawBrick, atkBrick: atkBrick, blockRatio: Math.round(blockRatio * 100), attackRatio: Math.round(attackRatio * 100), totalDmgBonus: Math.round(totalBonus * 100), totalDefBonus: Math.round(totalDefBonus * 100), isClawDeck: isClawDeck, isFrostDeck: isFrostDeck, isLightningDeck: isLightningDeck, isDarkDeck: isDarkDeck, isStatusDeck: isStatusDeck, isPowerDeck: isPowerDeck, isEnergyDeck: isEnergyDeck, orbSources: orbSources, lightningSources: lightningSources, darkSources: darkSources, statusSources: statusSources, consumeSources: consumeSources, powerCards: powerCount, nonZeroAtk: (typeCount.attack || 0) - zeroCostAtk };
+    return { deckSize: deckSize, uniqueCards: uniqueCards, drawScore: Math.round(drawScore), curveScore: Math.round(curveScore), dmgScore: dmgScore, defScore: defScore, loopScore: Math.round(loopScore), synCoverage: Math.round(synCoverage), finalWinRate: finalWinRate, brickProb: brickProb, bestPair: bestPair, bestRate: bestRate, avgCost: avgCost.toFixed(1), drawDensity: Math.round(drawDensity), drawCards: drawCards, totalDraw: totalDraw, zeroCostAtk: zeroCostAtk, hasAllForOne: hasAllForOne, hasClaw: hasClaw, clawCount: clawCount, typeCount: typeCount, deckSizePenalty: Math.round(deckSizePenalty), basicPenalty: Math.round(basicPenalty), dupAnalysis: dupAnalysis, energyGen: energyGen, basicCount: basicCount, highCostCount: highCostCount, avgBlockPerTurn: Math.round(avgBlockPerTurn), frostPassive: frostPassive, totalDamage: totalDamage, totalBlock: totalBlock, counts: counts, costBrick: costBrick, defBrick: defBrick, drawBrick: drawBrick, atkBrick: atkBrick, blockRatio: Math.round(blockRatio * 100), attackRatio: Math.round(attackRatio * 100), totalDmgBonus: Math.round(totalBonus * 100), totalDefBonus: Math.round(totalDefBonus * 100), isClawDeck: isClawDeck, isFrostDeck: isFrostDeck, isLightningDeck: isLightningDeck, isDarkDeck: isDarkDeck, isStatusDeck: isStatusDeck, isPowerDeck: isPowerDeck, isEnergyDeck: isEnergyDeck, orbSources: orbSources, lightningSources: lightningSources, darkSources: darkSources, statusSources: statusSources, consumeSources: consumeSources, powerCards: powerCount, nonZeroAtk: (typeCount.attack || 0) - zeroCostAtk, upgradedRatio: Math.round(upgradedRatio * 100) };
 }
 
 function renderHandAnalysis() {
@@ -438,22 +485,15 @@ function renderHandAnalysis() {
     function bar(w, c) { return '<div class="radar-bar-outer"><div class="radar-bar-inner" style="width:' + Math.max(0, Math.min(100, w)) + '%;background:' + c + ';"></div></div>'; }
     function colorByScore(s) { if (s >= 70) return '#4caf50'; if (s >= 45) return '#ff9800'; return '#f44336'; }
     var dmgColor = colorByScore(a.dmgScore), defColor = colorByScore(a.defScore), drawColor = colorByScore(a.drawScore), curveColor = colorByScore(a.curveScore), loopColor = colorByScore(a.loopScore);
-    var brickScore = Math.max(0, 100 - a.brickProb * 2), brickColor = colorByScore(brickScore);
+    var brickColor = a.brickProb <= 15 ? '#4caf50' : a.brickProb <= 35 ? '#ff9800' : '#f44336';
 
-   var survivalChecks = '';
-   if (a.defScore < 20) {
-    survivalChecks += '<span class="survival-badge danger">🔴 见不到Boss</span>';
-   } else if (a.finalWinRate >= 80) {
-    survivalChecks += '<span class="survival-badge safe">🟢 我无限了</span>';
-   } else if (a.finalWinRate >= 60) {
-    survivalChecks += '<span class="survival-badge safe">🟢 狠狠蠕动</span>';
-   } else if (a.finalWinRate >= 35) {
-    survivalChecks += '<span class="survival-badge warn">🟡 勉强蠕动</span>';
-   } else if (a.finalWinRate >= 15) {
-    survivalChecks += '<span class="survival-badge warn">🟡 汗流浃背</span>';
-   } else {
-    survivalChecks += '<span class="survival-badge danger">🔴 区完了</span>';
-   }
+    var survivalChecks = '';
+    if (a.defScore < 20) { survivalChecks += '<span class="survival-badge danger">🔴 见不到Boss</span>'; }
+    else if (a.finalWinRate >= 80) { survivalChecks += '<span class="survival-badge safe">🟢 我无限了</span>'; }
+    else if (a.finalWinRate >= 60) { survivalChecks += '<span class="survival-badge safe">🟢 能区</span>'; }
+    else if (a.finalWinRate >= 35) { survivalChecks += '<span class="survival-badge warn">🟡 勉强蠕动</span>'; }
+    else if (a.finalWinRate >= 15) { survivalChecks += '<span class="survival-badge warn">🟡 汗流浃背</span>'; }
+    else { survivalChecks += '<span class="survival-badge danger">🔴 区完了</span>'; }
 
     var tips = [];
     if (a.isClawDeck) { if (a.nonZeroAtk > 6) tips.push('⚠️ 非0费攻击偏多'); if (a.drawDensity < 20) tips.push('⚠️ 过牌不足'); if (a.deckSize > 25) tips.push('⚠️ 牌库偏大'); if (a.clawCount >= 3) tips.push('✅ 爪击密度优秀（' + a.clawCount + '张）'); }
@@ -481,6 +521,7 @@ function renderHandAnalysis() {
     if (a.deckSize >= 30 && a.drawDensity < 15 && !a.isClawDeck) tips.push('⚠️ 大牌库无过牌');
     if (a.totalDmgBonus >= 80) tips.push('🔥 伤害联动+' + a.totalDmgBonus + '%');
     if (a.totalDefBonus >= 60) tips.push('🛡️ 防御联动+' + a.totalDefBonus + '%');
+    if (a.upgradedRatio >= 50) tips.push('✨ 敲击率' + a.upgradedRatio + '%');
 
     var jibaoScore = 0;
     if (a.isFrostDeck && a.orbSources >= 4 && a.defScore >= 60) jibaoScore += 1;
@@ -498,12 +539,12 @@ function renderHandAnalysis() {
     radarSection.innerHTML =
         '<div class="deck-summary"><div class="big-rate ' + wrCls + '">' + a.finalWinRate + '%</div><div class="meta">预估胜率 · ' + a.deckSize + '张 · 均费' + a.avgCost + '</div></div>' +
         '<div class="radar-grid">' +
-        '<div class="radar-item"><div class="radar-label">⚔️ 伤害</div>' + bar(a.dmgScore, dmgColor) + '<div class="radar-value" style="color:' + dmgColor + ';">' + Math.min(100, a.dmgScore + a.totalDmgBonus) + '</div></div>' +
-        '<div class="radar-item"><div class="radar-label">🛡️ 防御</div>' + bar(a.defScore, defColor) + '<div class="radar-value" style="color:' + defColor + ';">' + Math.min(100, a.defScore + a.totalDefBonus) + '</div></div>' +
+        '<div class="radar-item"><div class="radar-label">⚔️ 伤害</div>' + bar(Math.min(100, a.dmgScore + a.totalDmgBonus), dmgColor) + '<div class="radar-value" style="color:' + dmgColor + ';">' + Math.min(100, a.dmgScore + a.totalDmgBonus) + '</div></div>' +
+        '<div class="radar-item"><div class="radar-label">🛡️ 防御</div>' + bar(Math.min(100, a.defScore + a.totalDefBonus), defColor) + '<div class="radar-value" style="color:' + defColor + ';">' + Math.min(100, a.defScore + a.totalDefBonus) + '</div></div>' +
         '<div class="radar-item"><div class="radar-label">🎴 过牌</div>' + bar(a.drawScore, drawColor) + '<div class="radar-value" style="color:' + drawColor + ';">' + a.drawScore + '</div></div>' +
         '<div class="radar-item"><div class="radar-label">💎 费用</div>' + bar(a.curveScore, curveColor) + '<div class="radar-value" style="color:' + curveColor + ';">' + a.curveScore + '</div></div>' +
         '<div class="radar-item"><div class="radar-label">🔄 循环</div>' + bar(a.loopScore, loopColor) + '<div class="radar-value" style="color:' + loopColor + ';">' + a.loopScore + '</div></div>' +
-        '<div class="radar-item"><div class="radar-label">🎯 稳定</div>' + bar(brickScore, brickColor) + '<div class="radar-value" style="color:' + brickColor + ';">' + brickScore + '</div></div>' +
+        '<div class="radar-item"><div class="radar-label">🎯 鬼抽</div>' + bar(a.brickProb, brickColor) + '<div class="radar-value" style="color:' + brickColor + ';">' + a.brickProb + '%</div></div>'+
         '</div>' +
         '<div class="survival-strip">' + survivalChecks + '</div>';
 
@@ -568,13 +609,13 @@ function renderAll() { renderPool(); renderHand(); renderHandAnalysis(); renderR
 
 $search.addEventListener('input', renderPool);
 $clear.addEventListener('click', function() { selected = []; renderAll(); });
-if ($resetBtn) { $resetBtn.addEventListener('click', function() { selected = []; var starterCards = ['defect_strike','defect_strike','defect_strike','defect_strike','defect_defend','defect_defend','defect_defend','defect_defend','defect_zap','defect_dualcast']; for (var i = 0; i < starterCards.length; i++) selected.push(starterCards[i]); renderAll(); toast('已恢复初始牌库'); }); }
+if ($resetBtn) { $resetBtn.addEventListener('click', function() { selected = []; var starterCards = ['defect_strike','defect_strike','defect_strike','defect_strike','defect_defend','defect_defend','defect_defend','defect_defend','defect_zap','defect_dualcast']; for (var i = 0; i < starterCards.length; i++) selected.push({ id: starterCards[i], upgraded: false }); renderAll(); toast('已恢复初始牌库'); }); }
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { selected = []; renderAll(); } });
 
 document.querySelectorAll('#filterRarity .filter-chip').forEach(function(btn) { btn.addEventListener('click', function() { document.querySelectorAll('#filterRarity .filter-chip').forEach(function(b) { b.classList.remove('active'); }); btn.classList.add('active'); rarityF = btn.dataset.rarity; renderPool(); }); });
 document.querySelectorAll('#filterType .filter-chip').forEach(function(btn) { btn.addEventListener('click', function() { document.querySelectorAll('#filterType .filter-chip').forEach(function(b) { b.classList.remove('active'); }); btn.classList.add('active'); typeF = btn.dataset.type; renderPool(); }); });
 
 selected = [];
-function initStarterDeck() { var starterCards = ['defect_strike','defect_strike','defect_strike','defect_strike','defect_defend','defect_defend','defect_defend','defect_defend','defect_zap','defect_dualcast']; for (var i = 0; i < starterCards.length; i++) selected.push(starterCards[i]); }
+function initStarterDeck() { var starterCards = ['defect_strike','defect_strike','defect_strike','defect_strike','defect_defend','defect_defend','defect_defend','defect_defend','defect_zap','defect_dualcast']; for (var i = 0; i < starterCards.length; i++) selected.push({ id: starterCards[i], upgraded: false }); }
 initStarterDeck(); renderAll();
-console.log('🔵 鸡煲卡牌搭配助手 v5.9 已就绪');
+console.log('🔵 鸡煲卡牌搭配助手 v6.1 已就绪');
