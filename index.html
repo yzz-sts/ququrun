@@ -222,34 +222,53 @@
         }
 
         @media (max-width: 900px) {
-            .app { flex-direction: column; }
-            .sidebar { width: 100%; height: 40vh; flex-shrink: 0; }
-            .sidebar-header { padding: 8px 12px; }
-            .sidebar-header h2 { font-size: 1em; }
-            .filter-chip { font-size: 0.7em; padding: 3px 8px; }
-            .search-box { font-size: 0.78em; padding: 6px 10px; }
-            .mini-card { width: 100px; height: 133px; }
-            .card-grid { gap: 6px; padding: 6px; }
-            .deck-zone { padding: 8px 12px; flex: 1; }
-            .deck-zone-header h3 { font-size: 0.85em; }
-            .deck-content { flex-direction: column; gap: 8px; }
-            .hand-cards { gap: 6px; }
-            .hand-card { width: 100px; }
-            .hand-card .hand-card-img-wrap { height: 133px; }
-            .analysis-panel { width: 100%; flex-shrink: 0; flex-direction: row; gap: 8px; font-size: 0.78em; padding: 8px; }
-            .radar-grid { flex-direction: row; flex-wrap: wrap; gap: 4px; }
-            .radar-item { flex: 1; min-width: 60px; }
-            .radar-label { font-size: 0.65em; width: auto; }
-            .radar-value { font-size: 0.8em; width: auto; }
-            .recommend-zone { padding: 6px 10px; }
-            .recommend-zone h3 { font-size: 0.8em; }
-            .rec-card { width: 100%; min-width: auto; padding: 8px; gap: 8px; }
-            .rec-card-img { width: 100px; height: 133px; }
-            .rec-card-name { font-size: 0.85em; }
-            .rec-card-rate { font-size: 1.1em; }
-            .btn-reset, .btn-clear { font-size: 0.7em; padding: 4px 10px; }
-            .card-preview { width: 200px; height: 267px; }
-        }
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; height: 35vh; flex-shrink: 0; }
+    .sidebar-header { padding: 6px 10px; }
+    .sidebar-header h2 { font-size: 0.95em; margin-bottom: 4px; }
+    .filter-chip { font-size: 0.68em; padding: 3px 7px; }
+    .search-box { font-size: 0.75em; padding: 5px 8px; margin-top: 4px; }
+    .mini-card { width: 90px; height: 120px; border-radius: 8px; }
+    .card-grid { gap: 5px; padding: 5px; }
+    
+    .deck-zone { padding: 6px 10px; flex: 1; }
+    .deck-zone-header { margin-bottom: 4px; }
+    .deck-zone-header h3 { font-size: 0.82em; }
+    .btn-reset, .btn-clear { font-size: 0.68em; padding: 3px 8px; }
+    .deck-content { flex-direction: column; gap: 6px; }
+    .hand-cards { gap: 5px; }
+    .hand-card { width: 90px; border-radius: 8px; }
+    .hand-card .hand-card-img-wrap { height: 120px; }
+    .hand-card .hand-card-bottom { padding: 3px 4px; gap: 4px; }
+    .hand-card-btn { width: 20px; height: 20px; font-size: 0.55em; }
+    .hand-card .hand-card-count { font-size: 0.7em; }
+    .hand-card-upgrade { width: 22px; height: 22px; font-size: 0.6em; top: 2px; right: 2px; }
+    
+    .analysis-panel { width: 100%; flex-shrink: 0; flex-direction: column; gap: 4px; font-size: 0.72em; padding: 8px; border-radius: 10px; }
+    .radar-grid { flex-direction: row; flex-wrap: wrap; gap: 3px; }
+    .radar-item { flex: 1; min-width: 55px; }
+    .radar-label { font-size: 0.6em; width: auto; }
+    .radar-bar-outer { height: 4px; max-width: 60px; }
+    .radar-value { font-size: 0.7em; width: auto; }
+    .deck-summary .big-rate { font-size: 1.4em; }
+    .deck-summary .meta { font-size: 0.7em; }
+    .survival-badge { font-size: 0.65em; padding: 2px 6px; }
+    .tips-section { font-size: 0.7em; }
+    
+    .recommend-zone { padding: 5px 8px; }
+    .recommend-zone h3 { font-size: 0.75em; margin-bottom: 4px; }
+    .rec-card { width: 100%; min-width: auto; padding: 6px 8px; gap: 6px; }
+    .rec-card-img { width: 90px; height: 120px; border-radius: 8px; }
+    .rec-card-name { font-size: 0.8em; }
+    .rec-card-rate { font-size: 1em; }
+    .rec-card-rank { font-size: 0.65em; }
+    .rec-card-detail { font-size: 0.65em; }
+    .rec-tag { font-size: 0.6em; }
+    
+    .card-preview { width: 160px; height: 213px; border-radius: 10px; }
+    .toast { font-size: 0.75em; padding: 8px 16px; }
+}
+
     </style>
 </head>
 <body>
